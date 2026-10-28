@@ -1,0 +1,8 @@
+*.dll
+*.exe
+.DS_Store
+/terraform-provider-moq
+/dist/
+.terraform/
+*.tfstate*
+.terraform.lock.hcl
