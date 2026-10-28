@@ -1,0 +1,84 @@
+name: Tests
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+          cache: true
+      - run: go build -v .
+      - run: go test -v ./...
+      - uses: golangci/golangci-lint-action@ba0d7d2ec06a0ea1cb5fa41b2e4a3ab91d21278a # v9.3.0
+        with:
+          version: latest
+
+  # docs/ is generated from the schema and examples; refuse drift.
+  generate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+          cache: true
+      - uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4.0.1
+        with:
+          terraform_wrapper: false
+      - run: cd tools && go generate ./...
+      - run: git diff --compact-summary --exit-code || (echo "Run 'just docs' and commit the result."; exit 1)
+
+  # Creates and destroys real projects on staging (moq.wtf) with a dedicated
+  # account's token. Forks never see the secret, so their PRs skip it.
+  acceptance:
+    name: "Acceptance: ${{ matrix.cli.name }} ${{ matrix.cli.version }}"
+    needs: build
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    # One run at a time: they share the staging account's project cap.
+    concurrency: acceptance
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        cli:
+          - { name: terraform, version: "1.17.*" }
+          - { name: tofu, version: "1.13.*" }
+    env:
+      TF_ACC: "1"
+      MOQ_TOKEN: ${{ secrets.MOQ_WTF_TOKEN }}
+      MOQ_ENDPOINT: https://api.moq.wtf/v1
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+          cache: true
+      - if: matrix.cli.name == 'terraform'
+        uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4.0.1
+        with:
+          terraform_version: ${{ matrix.cli.version }}
+          terraform_wrapper: false
+      - if: matrix.cli.name == 'tofu'
+        uses: opentofu/setup-opentofu@a1320f892987e89d278cc92dc5adc984fb93aca4 # v2.0.2
+        with:
+          tofu_version: ${{ matrix.cli.version }}
+          tofu_wrapper: false
+          provider_acceptance_tests: true
+      - run: go test -v -timeout 15m ./internal/provider/
+      - if: always()
+        run: go test -v ./internal/provider/ -sweep=wtf -sweep-run=moq_project
