@@ -26,7 +26,7 @@ provider "moq" {}
 
 ## Quickstart
 
-Create a project, a signing key that mints publish and watch tokens, and a rule that records `hello.hang`:
+Create a project and a signing key that mints publish and watch tokens. This is the [quickstart](https://moq.pro/doc/quickstart)'s Terraform section:
 
 ```terraform
 terraform {
@@ -44,12 +44,7 @@ resource "moq_project" "app" {}
 resource "moq_signing_key" "publish" {
   project_id = moq_project.app.id
   algorithm  = "HS256"
-  label      = "quickstart"
-}
-
-resource "moq_recording_rule" "hello" {
-  project_id = moq_project.app.id
-  patterns   = ["hello.hang"]
+  label      = "Quickstart"
 }
 
 output "project_id" {
@@ -61,7 +56,7 @@ output "key_id" {
 }
 ```
 
-The [quickstart](https://moq.pro/doc/quickstart) continues from a project ID and key ID to a live broadcast.
+The quickstart continues from `project_id` and `key_id` to a live broadcast.
 
 ## Behavior
 

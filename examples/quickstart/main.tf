@@ -13,12 +13,7 @@ resource "moq_project" "app" {}
 resource "moq_signing_key" "publish" {
   project_id = moq_project.app.id
   algorithm  = "HS256"
-  label      = "quickstart"
-}
-
-resource "moq_recording_rule" "hello" {
-  project_id = moq_project.app.id
-  patterns   = ["hello.hang"]
+  label      = "Quickstart"
 }
 
 output "project_id" {
