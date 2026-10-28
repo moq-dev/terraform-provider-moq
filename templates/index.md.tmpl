@@ -1,0 +1,29 @@
+---
+page_title: "MoQ Pro Provider"
+description: |-
+  Manage MoQ Pro CDN projects, signing keys, recording rules, and sync targets.
+---
+
+# MoQ Pro Provider
+
+Manage [MoQ Pro](https://moq.pro) CDN resources through its `/v1` [management API](https://moq.pro/doc/api): projects, the signing keys that mint media tokens, recording rules, and sync targets, with usage and recordings as data sources. Works with Terraform and OpenTofu.
+
+Create a **write** account token with access to all projects in [account settings](https://moq.pro/settings/tokens) and export it as `MOQ_TOKEN`. Point `MOQ_ENDPOINT` at another `/v1` base, such as staging, to manage that environment instead.
+
+{{ tffile "examples/provider/provider.tf" }}
+
+## Quickstart
+
+Create a project, a signing key that mints publish and watch tokens, and a rule that records `hello.hang`:
+
+{{ tffile "examples/quickstart/main.tf" }}
+
+The [quickstart](https://moq.pro/doc/quickstart) continues from a project ID and key ID to a live broadcast.
+
+## Behavior
+
+- Every create sends an `Idempotency-Key`, so a create retried after a dropped connection makes one resource.
+- Transient failures (rate limits, timeouts, and 5xx responses on requests safe to repeat) retry with capped exponential backoff, honoring `Retry-After`. Everything else fails at once.
+- Write-only secrets (bucket credentials, sync target publish URLs) are never read back. After `terraform import`, the next apply records them from configuration.
+
+{{ .SchemaMarkdown | trimspace }}
