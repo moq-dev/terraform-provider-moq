@@ -33,7 +33,7 @@ just docs    # regenerate docs/ from the schema, templates/, and examples/
 just acc     # acceptance tests: real projects on MOQ_ENDPOINT
 ```
 
-Acceptance tests create and destroy real projects. Run them with `MOQ_TOKEN` set to a write token for an account that exists only for testing, and `MOQ_ENDPOINT` set to a non-production `/v1` base such as `https://api.moq.wtf/v1` or a local `just dev` API. Test projects are named `tfacc-*`; `just sweep` deletes any a failed run left behind. CI runs them against staging with Terraform and OpenTofu on every push to `main`, using `MOQ_WTF_TOKEN` from the `acceptance` environment.
+Acceptance tests create and destroy real projects. Run them with `MOQ_TOKEN` set to a write token for an account that exists only for testing, and `MOQ_ENDPOINT` set to a non-production `/v1` base such as `https://api.moq.wtf/v1` or a local `just dev` API. Test projects are named `tfacc-*`; `just sweep` deletes any a failed run left behind. CI runs them against staging with Terraform and OpenTofu on every push to `main` (or a manual run on `main`), using `MOQ_WTF_TOKEN` from the `acceptance` environment.
 
 To try a local build, point a CLI config's `dev_overrides` at it:
 

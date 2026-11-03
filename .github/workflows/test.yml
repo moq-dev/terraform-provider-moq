@@ -43,11 +43,12 @@ jobs:
 
   # Creates and destroys real projects on staging (moq.wtf) with a dedicated
   # account's token. The token lives in the acceptance environment, which only
-  # main can deploy to, so PR branch code never runs with it.
+  # main can deploy to, so PR branch code never runs with it. Dispatch on main
+  # reruns it without a push, e.g. after rotating the token.
   acceptance:
     name: "Acceptance: ${{ matrix.cli.name }} ${{ matrix.cli.version }}"
     needs: build
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     environment: acceptance
     runs-on: ubuntu-latest
     timeout-minutes: 20
