@@ -33,7 +33,7 @@ just docs    # regenerate docs/ from the schema, templates/, and examples/
 just acc     # acceptance tests: real projects on MOQ_ENDPOINT
 ```
 
-Acceptance tests create and destroy real projects. Run them with `MOQ_TOKEN` set to a write token for an account that exists only for testing, and `MOQ_ENDPOINT` set to a non-production `/v1` base such as `https://api.moq.wtf/v1` or a local `just dev` API. Test projects are named `tfacc-*`; `just sweep` deletes any a failed run left behind. CI runs them against staging with Terraform and OpenTofu.
+Acceptance tests create and destroy real projects. Run them with `MOQ_TOKEN` set to a write token for an account that exists only for testing, and `MOQ_ENDPOINT` set to a non-production `/v1` base such as `https://api.moq.wtf/v1` or a local `just dev` API. Test projects are named `tfacc-*`; `just sweep` deletes any a failed run left behind. CI runs them against staging with Terraform and OpenTofu on every push to `main`, using `MOQ_WTF_TOKEN` from the `acceptance` environment.
 
 To try a local build, point a CLI config's `dev_overrides` at it:
 
@@ -48,7 +48,7 @@ provider_installation {
 
 ## Releasing
 
-Pushing a `v*` tag runs goreleaser, which builds every platform, signs the checksums with the repository's GPG key, and publishes a GitHub release. The Terraform registry picks it up by webhook; the OpenTofu registry reads releases once the provider and its signing key are registered there.
+Pushing a `v*` tag runs goreleaser, which builds every platform, signs the checksums with the GPG key from the `release` environment, and publishes a GitHub release. Only maintainers can push `v*` tags, and only those tags can deploy to `release`. The Terraform registry picks it up by webhook; the OpenTofu registry reads releases once the provider and its signing key are registered there.
 
 ## License
 

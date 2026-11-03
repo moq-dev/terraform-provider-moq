@@ -42,11 +42,13 @@ jobs:
       - run: git diff --compact-summary --exit-code || (echo "Run 'just docs' and commit the result."; exit 1)
 
   # Creates and destroys real projects on staging (moq.wtf) with a dedicated
-  # account's token. Forks never see the secret, so their PRs skip it.
+  # account's token. The token lives in the acceptance environment, which only
+  # main can deploy to, so PR branch code never runs with it.
   acceptance:
     name: "Acceptance: ${{ matrix.cli.name }} ${{ matrix.cli.version }}"
     needs: build
-    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    environment: acceptance
     runs-on: ubuntu-latest
     timeout-minutes: 20
     # One run at a time: they share the staging account's project cap.
