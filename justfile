@@ -5,6 +5,10 @@ check:
 	go test ./...
 	go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint@latest run
 
+# Run what CI runs: the checks, then docs/ regenerated, which must match what is committed.
+ci: check docs
+	git diff --compact-summary --exit-code -- docs examples || { echo "Commit the regenerated docs/ and examples/."; exit 1; }
+
 # Regenerate docs/ from the schema, templates/, and examples/.
 docs:
 	cd tools && go generate ./...
